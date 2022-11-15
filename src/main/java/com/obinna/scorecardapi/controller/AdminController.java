@@ -1,8 +1,10 @@
 package com.obinna.scorecardapi.controller;
 
 import com.obinna.scorecardapi.dto.DecadevDto;
+import com.obinna.scorecardapi.dto.WeeklyScoreDto;
 import com.obinna.scorecardapi.dto.responsedto.APIResponse;
 import com.obinna.scorecardapi.model.User;
+import com.obinna.scorecardapi.model.WeeklyScore;
 import com.obinna.scorecardapi.service.AdminService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +20,16 @@ import org.springframework.web.bind.annotation.*;
 public class AdminController {
     private final AdminService adminService;
 
+
+    @PostMapping("/weekly-score/{devId}")
+    public ResponseEntity<APIResponse<?>> weeklyScore(@PathVariable("devId") Long devId, @RequestBody WeeklyScoreDto score) {
+        try {
+            WeeklyScore devScore = adminService.decadevWeeklyScore(score, devId);
+            return new ResponseEntity<>(new APIResponse<>(true, "Weekly score populated successfully", devScore), HttpStatus.CREATED);
+        } catch (Exception ex) {
+            return new ResponseEntity<>(new APIResponse<>(false, ex.getMessage(), null), HttpStatus.BAD_REQUEST);
+        }
+    }
 
     @PostMapping("/create-decadev/{squadId}/{stackId}/{podId}")
     public ResponseEntity<APIResponse<?>> createDecadev(@RequestBody DecadevDto decadevDto, @PathVariable("podId") Long podId, @PathVariable("stackId") Long stackId, @PathVariable("squadId") Long squadId) {

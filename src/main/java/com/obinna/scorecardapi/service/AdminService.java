@@ -1,9 +1,11 @@
 package com.obinna.scorecardapi.service;
 
 import com.obinna.scorecardapi.dto.DecadevDto;
+import com.obinna.scorecardapi.dto.WeeklyScoreDto;
 import com.obinna.scorecardapi.dto.responsedto.APIResponse;
 import com.obinna.scorecardapi.model.Decadev;
 import com.obinna.scorecardapi.model.User;
+import com.obinna.scorecardapi.model.WeeklyScore;
 import com.obinna.scorecardapi.response.AdminResponse;
 
 import java.util.List;
@@ -11,6 +13,8 @@ import java.util.List;
 
 public interface AdminService {
     List<AdminResponse> getAllAdmin();
+
+    WeeklyScore decadevWeeklyScore(WeeklyScoreDto weeklyScoreDto, Long id);
 
    User createDecadev(DecadevDto dev, Long podId, Long stackId, Long squadId);
 

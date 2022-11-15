@@ -1,15 +1,18 @@
 package com.obinna.scorecardapi.serviceImpl;
 
 import com.obinna.scorecardapi.dto.DecadevDto;
+import com.obinna.scorecardapi.dto.WeeklyScoreDto;
 import com.obinna.scorecardapi.dto.responsedto.APIResponse;
 import com.obinna.scorecardapi.enums.Role;
 import com.obinna.scorecardapi.exception.CustomException;
 import com.obinna.scorecardapi.exception.SquadNotFoundException;
 import com.obinna.scorecardapi.exception.StackNotFoundException;
+import com.obinna.scorecardapi.exception.UserNotFoundException;
 import com.obinna.scorecardapi.model.*;
 import com.obinna.scorecardapi.repository.*;
 import com.obinna.scorecardapi.response.AdminResponse;
 import com.obinna.scorecardapi.service.AdminService;
+import com.obinna.scorecardapi.utility.CalculateScores;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +23,8 @@ import java.util.List;
 public class AdminServiceImpl implements AdminService {
 
     private final AdminRepository adminRepository;
+    private final DecadevRepository decadevRepository;
+    private final WeeklyScoreRepository scoreRepository;
     private final UserRepository userRepository;
     private final PodRepository podRepository;
     private final StackRepository stackRepository;
@@ -35,6 +40,35 @@ public class AdminServiceImpl implements AdminService {
             }
         }
         return adminResponses;
+    }
+
+    @Override
+    public WeeklyScore decadevWeeklyScore(WeeklyScoreDto score, Long id) {
+        if((score.getAlgorithmScore() < 0|| score.getAlgorithmScore() > 100.0)
+                || (score.getWeeklyTask() < 0 || score.getWeeklyTask() > 100.0)
+                || (score.getWeeklyAssessment() < 0 || score.getWeeklyAssessment() > 100.0)
+                || (score.getAgileTest() < 0 || score.getAgileTest() >100.0)
+                || (score.getQaTest() < 0 || score.getQaTest() > 100.0 )){
+            throw new CustomException("Decadev score shouldn't be less than zero(0) or greater than 100 ");
+        }
+
+        Decadev dev = decadevRepository.findById(id).orElseThrow(
+                () -> new UserNotFoundException("No Decadev with the ID: " + id));
+        if (scoreRepository.findWeeklyScoreByWeekAndDecadev(score.getWeek(), dev) != null) {
+            throw new CustomException("Weekly score already populated");
+        }
+        WeeklyScore devWeeklyScore = new WeeklyScore();
+        double result = CalculateScores.weeklyCumulative(score.getWeeklyTask(),
+                score.getAlgorithmScore(), score.getQaTest(), score.getAgileTest(), score.getWeeklyAssessment());
+        devWeeklyScore.setAlgorithmScore(score.getAlgorithmScore());
+        devWeeklyScore.setWeeklyAssessment(score.getWeeklyAssessment());
+        devWeeklyScore.setQaTest(score.getQaTest());
+        devWeeklyScore.setAgileTest(score.getAgileTest());
+        devWeeklyScore.setWeeklyTask(score.getWeeklyTask());
+        devWeeklyScore.setWeek(score.getWeek());
+        devWeeklyScore.setDecadev(dev);
+        devWeeklyScore.setCumulativeScore(result);
+        return scoreRepository.save(devWeeklyScore);
     }
 
     @Override
